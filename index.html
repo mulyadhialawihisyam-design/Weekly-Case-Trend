@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Perbandingan Bulan vs Bulan (Horizontal Bar)</title>
+
+<style>
+/* Konsep Desain Singkat:
+   Dashboard dengan tema biru-putih yang bersih dan modern, menggunakan gradasi radial untuk background halaman guna memberikan kedalaman ringan tanpa mencolok. Panel-panel dirancang dengan rounded corners lembut dan shadow halus untuk kesan profesional, dilengkapi efek hover sederhana (angkat sedikit dan shadow lebih dalam) untuk interaktivitas. Filter select diberi styling modern dengan border biru-abu yang responsif terhadap fokus. Tabel menggunakan header biru muda, hover row, dan highlight khusus untuk total row, dengan typography yang jelas. Chart bar horizontal menggunakan gradasi warna (biru untuk A, oranye/teal untuk B) dengan rounded bars untuk kesan smooth, angka kontras di dalam bar. Responsif: Desktop (grid 2 kolom), tablet (grid 1 kolom dengan padding disesuaikan), mobile (stack vertikal, font dan padding dikurangi untuk readability minimal). Warna utama biru (#4a86e8), putih, abu-abu (#eef2f6), aksen oranye (#f39c12) dan teal (#17a2b8). */
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font modern dan readable */
+  background: radial-gradient(circle at top left, #f7fbff 0%, #eef4f9 50%, #e3f2fd 100%), 
+              radial-gradient(circle at bottom right, #f7fbff 0%, #eef4f9 50%, #e3f2fd 100%);
+  background-size: 100% 100%;
+  background-attachment: fixed;
+  padding: 24px;
+  color: #1f2d3d;
+  line-height: 1.5;
+}
+
+h1 {
+  margin-bottom: 16px;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1f2d3d;
+  text-align: center;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 2px solid #d1e7ff;
+  background: #fff;
+  font-size: 14px;
+  color: #1f2d3d;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+  min-width: 120px;
+}
+
+select:focus {
+  border-color: #4a86e8;
+  box-shadow: 0 0 0 3px rgba(74, 134, 232, 0.1);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+th, td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eef2f6;
+  text-align: center;
+  font-size: 14px;
+}
+
+th {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+tbody tr:hover {
+  background: #f8f9fa;
+  transition: background 0.2s ease;
+}
+
+tfoot td {
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  font-weight: bold;
+  color: #856404;
+  border-top: 2px solid #ffc107;
+}
+
+canvas {
+  width: 100%;
+  height: 520px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsif: Tablet (max-width: 768px) - Grid menjadi 1 kolom, padding disesuaikan */
+@media (max-width: 768px) {
+  body {
+    padding: 16px;
+  }
+  h1 {
+    font-size: 1.5rem;
+  }
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .filters {
+    gap: 8px;
+  }
+  select {
+    min-width: 100px;
+    font-size: 13px;
+  }
+  th, td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .panel {
+    padding: 16px;
+  }
+}
+
+/* Responsif: Mobile (max-width: 480px) - Stack vertikal, font dan padding lebih kecil */
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+  }
+  h1 {
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+  }
+  .layout {
+    gap: 12px;
+  }
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  select {
+    min-width: unset;
+    width: 100%;
+    font-size: 12px;
+  }
+  th, td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .panel {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  canvas {
+    height: 400px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<h1>Stastitik kasus Bulan Vs Bulan</h1>
+
+<div class="panel">
+  <div class="filters">
+    <select id="yearA"></select>
+    <select id="monthA"></select>
+    <select id="yearB"></select>
+    <select id="monthB"></select>
+    <select id="caseSel"></select>
+    <select id="statusSel"></select>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- TABLE -->
+  <div class="panel">
+    <table>
+      <thead>
+        <tr>
+          <th>Week</th>
+          <th id="labelA"></th>
+          <th>Week</th>
+          <th id="labelB"></th>
+        </tr>
+      </thead>
+      <tbody id="vsTable"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2" id="totalA"></td>
+          <td colspan="2" id="totalB"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- CHART -->
+  <div class="panel">
+    <canvas id="vsChart" width="600" height="520"></canvas>
+  </div>
+
+</div>
+
+<script>
+const DATA_URL="https://script.google.com/macros/s/AKfycbyWBWuNZs9m3ixRZ6NUrEtX8pxhtdvPRmh5Yw_70J6GDdikF76QByva9zRB5mzA9plR/exec";
+let raw=[];
+
+/* ========= UTIL ========= */
+function parseDate(r){
+  if(!r.tanggal) return new Date("invalid");
+  const p=r.tanggal.split("/");
+  return new Date(p[2],p[1]-1,p[0]);
+}
+function weekIndex(w){
+  const m=w?.match(/week\s*(\d+)/i);
+  return m?Number(m[1]):null;
+}
+function unique(a){return [...new Set(a.filter(Boolean))];}
+
+/* ========= FETCH ========= */
+fetch(DATA_URL)
+  .then(r=>r.json())
+  .then(j=>{
+    raw=j;
+    initFilters();
+    render();
+  });
+
+/* ========= FILTER INIT ========= */
+function fill(sel,opts,all,label){
+  sel.innerHTML=all?`<option value="all">${label}</option>`:"";
+  opts.forEach(o=>sel.innerHTML+=`<option value="${o}">${o}</option>`);
+}
+function initFilters(){
+  const years=unique(raw.map(r=>parseDate(r).getFullYear()).filter(y=>!isNaN(y)));
+  fill(yearA,years);
+  fill(yearB,years);
+  fill(monthA,[...Array(12)].map((_,i)=>i+1));
+  fill(monthB,[...Array(12)].map((_,i)=>i+1));
+  fill(caseSel,unique(raw.map(r=>r.kasus)),true,"Semua Kasus");
+  fill(statusSel,unique(raw.map(r=>r.status_terkirim)),true,"Semua Status");
+  document.querySelectorAll("select").forEach(s=>s.onchange=render);
+}
+
+/* ========= FILTER ========= */
+function filterData(y,m,k,s){
+  return raw.filter(r=>{
+    const d=parseDate(r);
+    if(d.getFullYear()!=y) return false;
+    if(d.getMonth()+1!=m) return false;
+    if(k!=="all" && r.kasus!==k) return false;
+    if(s!=="all" && r.status_terkirim!==s) return false;
+    return true;
+  });
+}
+
+/* ========= GROUP ========= */
+function groupByWeek(a,b){
+  const map={};
+  for(let i=1;i<=5;i++) map[i]={A:0,B:0};
+  a.forEach(r=>{ const w=weekIndex(r.weekmonth); if(w) map[w].A++; });
+  b.forEach(r=>{ const w=weekIndex(r.weekmonth); if(w) map[w].B++; });
+  return map;
+}
+
+/* ========= RENDER ========= */
+function render(){
+  const yA=+yearA.value, mA=+monthA.value;
+  const yB=+yearB.value, mB=+monthB.value;
+  const k=caseSel.value, s=statusSel.value;
+
+  const A=filterData(yA,mA,k,s);
+  const B=filterData(yB,mB,k,s);
+  const map=groupByWeek(A,B);
+
+  labelA.innerText=`${mA}/${yA}`;
+  labelB.innerText=`${mB}/${yB}`;
+
+  renderTable(map,mA,yA,mB,yB);
+  renderChart(map,mA,yA,mB,yB);
+}
+
+/* ========= TABLE ========= */
+function renderTable(map,mA,yA,mB,yB){
+  let tA=0,tB=0;
+  vsTable.innerHTML="";
+  for(let i=1;i<=5;i++){
+    tA+=map[i].A;
+    tB+=map[i].B;
+    vsTable.innerHTML+=`
+      <tr>
+        <td>Week ${i} ${mA}/${yA}</td><td>${map[i].A}</td>
+        <td>Week ${i} ${mB}/${yB}</td><td>${map[i].B}</td>
+      </tr>`;
+  }
+  totalA.innerText=`TOTAL ${mA}/${yA} : ${tA}`;
+  totalB.innerText=`TOTAL ${mB}/${yB} : ${tB}`;
+}
+
+/* ========= HORIZONTAL BAR CHART ========= */
+function renderChart(map,mA,yA,mB,yB){
+  const c=vsChart,ctx=c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+
+  const bars=[];
+  for(let i=1;i<=5;i++){
+    bars.push({label:`Week ${i} ${mA}/${yA}`,v:map[i].A,color:"#4a86e8"});
+    bars.push({label:`Week ${i} ${mB}/${yB}`,v:map[i].B,color:"#f39c12"});
+  }
+
+  const max=Math.max(...bars.map(b=>b.v),1);
+  const rowH=36;
+  const startY=30;
+  const chartW=c.width-200;
+
+  bars.forEach((b,i)=>{
+    const y=startY+i*rowH;
+    const w=(b.v/max)*chartW;
+
+    // bar
+    ctx.fillStyle=b.color;
+    ctx.beginPath();
+    ctx.roundRect(180,y,w,24,6);
+    ctx.fill();
+
+    // value
+    ctx.fillStyle="#fff";
+    ctx.font="bold 12px Arial";
+    ctx.textAlign="right";
+    ctx.fillText(b.v,180+w-8,y+17);
+
+    // label
+    ctx.fillStyle="#000";
+    ctx.textAlign="right";
+    ctx.font="12px Arial";
+    ctx.fillText(b.label,170,y+17);
+  });
+}
+</script>
+
+</body>
+</html>
